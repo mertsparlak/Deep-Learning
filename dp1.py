@@ -38,11 +38,31 @@ from keras.models import Sequential
 from keras.layers import Dense,Input
 classifier = Sequential()
 
-# İlk katman olarak Input katmanı ekleniyor
+# İlk katman, giriş katman olarak Input katmanı ekleniyor
 classifier.add(Input(shape=(11,)))
 
-# Diğer katmanlar ekleniyor
+#gizli katmanlar
 classifier.add(Dense(6, kernel_initializer="uniform", activation="relu"))
 classifier.add(Dense(6, kernel_initializer="uniform", activation="relu"))
+
+#çıkış katmanı
+classifier.add(Dense(1, kernel_initializer="uniform", activation="sigmoid"))
+
+# tahmini yaptıracağımız değerler 1 ve 0 dan oluştuğundan binary entropy kullanıcaz
+classifier.compile(optimizer="adam",loss="binary_crossentropy", metrics=["accuracy"]) 
+
+#epoch(çağ,tekrar) kaç kere çalışacağıdır
+#loss'u düşük tutup,accuracy yüksek tutmaya çalışıyoruz
+classifier.fit(X_train,y_train, epochs=50)
+
+y_pred=classifier.predict(X_test)
+y_pred=(y_pred>0.5)
+
+from sklearn.metrics import confusion_matrix
+cm=confusion_matrix(y_test,y_pred)
+
+print(cm)
+
+
 
 
