@@ -27,9 +27,22 @@ X=X[:,1:]
 
 from sklearn.model_selection import train_test_split
 x_train,x_test,y_train,y_test=train_test_split(X,Y,test_size=0.33,random_state=0)
-from sklean.preprocessing import StandartScaler
-sc=StandartScaler()
-
+from sklearn.preprocessing import StandardScaler
+sc=StandardScaler()
 X_train=sc.fit_transform(x_train)
 X_test=sc.fit_transform(x_test)
+
+#yapay sinir ağları oluşturucaz
+import keras
+from keras.models import Sequential
+from keras.layers import Dense,Input
+classifier = Sequential()
+
+# İlk katman olarak Input katmanı ekleniyor
+classifier.add(Input(shape=(11,)))
+
+# Diğer katmanlar ekleniyor
+classifier.add(Dense(6, kernel_initializer="uniform", activation="relu"))
+classifier.add(Dense(6, kernel_initializer="uniform", activation="relu"))
+
 
