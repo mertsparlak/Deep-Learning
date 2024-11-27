@@ -94,3 +94,63 @@ mlp=MLPBlock()
 y=mlp(tf.ones(shape=(3,64)))
 
 mlp.weights
+
+"""#MODEL OLUŞTURMA"""
+
+from sklearn.datasets import fetch_california_housing
+housing=fetch_california_housing()
+
+for i in housing:
+  print(i)
+
+from sklearn.model_selection import train_test_split
+
+X_train_full,X_test,y_train_full,y_test=train_test_split(housing.data,housing.target,random_state=42)
+
+X_train,X_valid,y_train,y_valid=train_test_split(X_train_full,y_train_full,random_state=42)
+
+class WideAndDeepModel(tf.keras.Model):
+  def __init__(self,units=30,activation="relu",**kwargs):
+    super().__init__(**kwargs)
+    self.norm_layer_wide=keras.layers.Normalization()
+    self.norm_layer_deep=keras.layers.Normalization()
+    self.hidden1=keras.layers.Dense(units,activation=activation)
+    self.hidden2=keras.layers.Dense(units,activation=activation)
+    self.main_output=keras.layers.Dense(1)
+  def call(self,inputs):
+    input_wide,input_deep=inputs
+    norm_wide=self.norm_layer_wide(input_wide)
+    norm_deep=self.norm_layer_deep(input_deep)
+    hidden1=self.hidden1(norm_deep)
+    hidden2=self.hidden2(hidden1)
+    concat=keras.layers.concatenate([norm_wide,hidden2])
+    output=self.main_output(concat)
+    return output
+
+tf.random.set_seed(42)
+model=WideAndDeepModel(
+    30,
+    activation="relu",
+    name="my_model"
+)
+
+optimizer=tf.keras.optimizers.Adam(learning_rate=0.001)
+model.compile(loss="mse",optimizer=optimizer,metrics=["RootMeanSquaredError"])
+
+X_train_wide,X_train_deep=X_train[:,:5],X_train[:,2:]
+X_valid_wide,X_valid_deep=X_valid[:,:5],X_valid[:,2:]
+X_test_wide,X_test_deep=X_test[:,:5],X_test[:,2:]
+
+model.norm_layer_wide.adapt(X_train_wide)
+model.norm_layer_deep.adapt(X_train_deep)
+
+history=model.fit((X_train_wide,X_train_deep),y_train,epochs=20,validation_data=((X_valid_wide,X_valid_deep),y_valid))
+
+eval=model.evaluate((X_test_wide,X_test_deep),y_test)
+eval
+
+X_new_wide,X_new_deep=X_test_wide[:3],X_test_deep[:3]
+y_pred=model.predict((X_new_wide,X_new_deep))
+y_pred
+
+y_test[:3]
